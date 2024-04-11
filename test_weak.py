@@ -48,3 +48,14 @@ def test_accessed_second_level():
 
     assert response._accessed['customer'] == True
     assert response.customer._accessed['name'] == True
+
+def test_report_unaccessed():
+    response = make_request()
+
+    response.a
+    response.customer.name
+
+    assert response.get_unaccessed() == [
+        'b',
+        'customer.email',
+    ]

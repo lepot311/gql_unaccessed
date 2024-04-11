@@ -41,6 +41,18 @@ class AccessedNamespace:
             return object.__getattribute__(self, '_data')[name]
         return object.__getattribute__(self, name)
 
+    def get_unaccessed(self):
+        results = []
+        for k, v in self._data.items():
+            if self._accessed[k] is False:
+                results.append(k)
+            if isinstance(v, AccessedNamespace):
+                results += [
+                    f"{k}.{v}"
+                    for v in v.get_unaccessed()
+                ]
+        return results
+
 
 def make_request():
     # example of what we might get back from gql client
