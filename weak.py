@@ -1,16 +1,18 @@
-from collections import defaultdict
-from types import SimpleNamespace
-import weakref
 import json
+import logging
+import weakref
+
+LOGGER = logging.getLogger()
+LOGGER.setLevel(logging.DEBUG)
 
 
-class Response:
+class AccessedNamespace:
     def __init__(self, data):
         self._data = data
 
-        self._accessed = self.build_dict(data)
+        self._accessed = self._build_dict(data)
 
-    def build_dict(self, data, value=None):
+    def _build_dict(self, data, value=None):
         '''
         Walk through a dict and build up a copy.
         If the value is a dict, recurse,
@@ -19,7 +21,7 @@ class Response:
         result = {}
         for k, v in data.items():
             if type(v) is dict:
-                result[k] = self.build_dict(v)
+                result[k] = self._build_dict(v)
             else:
                 result[k] = False
         return result
@@ -28,11 +30,11 @@ class Response:
         '''
         Update this attr's value in self._accessed and return the original attr.
         '''
-        #print(f"__getattr__ {name}")
+        LOGGER.debug("__getattr__ %s", name)
 
         if name not in ('_data', '_accessed'):
             if type(self._accessed[name]) is not dict:
-                #print(f"setting '{name}' as accessed")
+                LOGGER.debug("[ACCESSED] %s", name)
                 # update the accessed dict to show this has been accessed
                 self._accessed[name] = True
             # return the value from the self._data object
@@ -50,8 +52,10 @@ def make_request():
             'email': 'erik@example.com',
         },
     }
+    # build a chain of AccessedNamespace objects
+    # object_hook replaces each JSON object (dict) with an AccessedNamespace
     response = json.loads(
         json.dumps(data),
-        object_hook=lambda d: Response(d)
+        object_hook=lambda d: AccessedNamespace(d)
     )
     return response
