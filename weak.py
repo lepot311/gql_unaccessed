@@ -12,6 +12,9 @@ class AccessedNamespace:
 
         self._accessed = self._build_dict(data)
 
+        # register a deconstructor callback
+        weakref.finalize(self, self.log_for_unaccessed)
+
     def _build_dict(self, data, value=None):
         '''
         Walk through a dict and build up a copy.
@@ -52,6 +55,11 @@ class AccessedNamespace:
                     for v in v.get_unaccessed()
                 ]
         return results
+
+    def log_for_unaccessed(self):
+        unaccessed = self.get_unaccessed()
+        if unaccessed:
+            LOGGER.error("The following attributes were never accessed: %s", unaccessed)
 
 
 def make_request():
